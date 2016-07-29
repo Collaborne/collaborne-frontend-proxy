@@ -1,0 +1,15 @@
+{
+  "name": "collaborne-frontend-proxy",
+  "description": "Frontend for the collaborne-frontend S3 bucket",
+  "main": "index.js",
+  "authors": [
+    "Collaborne B.V."
+  ],
+  "dependencies": {
+    "polymer": "^1.6.0",
+    "iron-elements": "PolymerElements/iron-elements#^1.0.10",
+    "paper-elements": "PolymerElements/paper-elements#^1.0.7",
+    "f-jwt-decode": "firmfirm/f-jwt-decode",
+    "fetch-element": "Collaborne/fetch-element#extract-script-for-import"
+  }
+}

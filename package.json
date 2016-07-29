@@ -1,0 +1,48 @@
+{
+  "name": "collaborne-frontend-proxy",
+  "version": "1.0.0",
+  "description": "Frontend for the collaborne-frontend S3 bucket",
+  "main": "index.js",
+  "scripts": {
+    "heroku-prebuild": "npm install --only=dev",
+    "postinstall": "bower install",
+    "prepublish": "gulp",
+    "start": "node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Collaborne/collaborne-frontend-proxy.git"
+  },
+  "author": "Collaborne B.V.",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Collaborne/collaborne-frontend-proxy/issues"
+  },
+  "homepage": "https://github.com/Collaborne/collaborne-frontend-proxy#readme",
+  "dependencies": {
+    "aws-sdk": "^2.4.11",
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "express-authentication": "^0.3.2",
+    "morgan": "^1.7.0",
+    "pg": "^6.0.3",
+    "request": "^2.74.0"
+  },
+  "devDependencies": {
+    "bower": "^1.7.9",
+    "del": "^2.2.1",
+    "gulp": "^3.9.1",
+    "gulp-util": "^3.0.7",
+    "jsonwebtoken": "^7.1.7",
+    "merge-stream": "^1.0.0",
+    "run-sequence": "^1.2.2",
+    "through2": "^2.0.1"
+  },
+  "cacheDirectories": [
+    "node_modules",
+    "app/bower_components"
+  ],
+  "engines": {
+    "node": "^6.3.0"
+  }
+}

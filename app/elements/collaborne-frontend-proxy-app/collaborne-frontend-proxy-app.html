@@ -1,0 +1,224 @@
+<!doctype html>
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-header-panel/paper-header-panel.html">
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="../../bower_components/f-jwt-decode/f-jwt-decode.html">
+<link rel="import" href="../../bower_components/fetch-element/fetch-import.html">
+
+<dom-module id="collaborne-frontend-proxy-app">
+    <template>
+        <style is="custom-style" include="iron-flex iron-flex-alignment iron-flex-factors iron-positioning"></style>
+        <style>
+            .action {
+                margin-right: 15px;
+            }
+            .action a, .action a:visited {
+                text-decoration: underline;
+                color: blue;
+            }
+            .action paper-icon-button {
+                height: 2em;
+                width: 2em;
+                --paper-icon-button-ink-color: var(--paper-indigo-500);
+            }
+            .action span {
+                font-weight: bold;
+            }
+            .user {
+            }
+            .user img {
+                vertical-align: middle;
+                height: 32px;
+                width: 32px;
+            }
+            .user a, .user a:visited {
+                text-decoration: none;
+                color: inherit;
+            }
+        </style>
+
+        <f-jwt-decode token="[[token]]" value="{{_decodedToken}}"></f-jwt-decode>
+        <paper-header-panel class="seamed layout vertical" style="background-color: #7f7f7f">
+            <paper-toolbar justify="justified">
+                <div>Collaborne Frontend Proxy</div>
+                <div class="layout horizontal justified user">
+                    <a target="_blank" href="[[_decodedToken.home]]"><img src="[[_decodedToken.avatar]]">[[_decodedToken.sub]]</a>
+                </div>
+            </paper-toolbar>
+            <iron-list items="[[_getApps(token, _apps.*)]]" as="app" class="layout vertical">
+                <template>
+                    <div class="flex" style="padding: 4px; width: 100%">
+                        <paper-card elevation="1" style="width: 100%">
+                            <div class="card-content">
+                                <div class="action">
+                                    <paper-icon-button icon="icons:expand-more" aria-controls$="[[_getAppCollapseId(app)]]" on-tap="_tapToggleApp"></paper-icon-button>
+                                    <span><a target="_blank" href="[[_getVersionUrl(app, 'current')]]">[[app.id]]</a></span>
+                                    <!-- TODO: Icon/Github link -->
+                                    <!-- TODO: Click to find other apps for this owner -->
+                                    <span style="float:right"><iron-icon icon="icons:perm-identity"></iron-icon>[[app.owner]]</span>
+                                </div>
+                                <iron-collapse id="[[_getAppCollapseId(app)]]">
+                                    <div class="layout vertical">
+                                        <template is="dom-repeat" items="[[_getVersions(token, _apps.*, app.id)]]">
+                                            <div>
+                                                <iron-icon icon="[[_getVersionIcon(app, item.id)]]"></iron-icon>
+                                                <a target="_blank" href="[[_getVersionUrl(app, item.id)]]">[[item.id]]</a>
+                                                <paper-icon-button alt="Deploy" icon="icons:redo" data-app$="[[app.id]]" data-version$="[[item.id]]" on-tap="_tapDeployVersion"></paper-icon-button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </iron-collapse>
+                            </div>
+                            <div class="card-actions">
+                                <paper-button>Delete</paper-button>
+                            </div>
+                        </paper-card>
+                    </div>
+                </template>
+            </iron-list>
+        </paper-header-panel>
+
+    </template>
+
+    <script>
+        'use strict';
+
+        Polymer({
+            is: 'collaborne-frontend-proxy-app',
+
+            properties: {
+                token: {
+                    type: String,
+                    notify: true
+                },
+                _decodedToken: {
+                    type: String
+                },
+                _update: {
+                    type: Number
+                },
+                _apps: {
+                    type: Object,
+                    readOnly: true
+                }
+            },
+
+            ready: function() {
+                this._loadApps(this.token);
+            },
+
+            _query: function(token, path, options = {}) {
+                if (!token) {
+                    return;
+                }
+
+                const headers = new Headers();
+                headers.set('authorization', `Bearer ${token}`);
+                headers.set('accept', 'application/json');
+
+                return fetch(path, Object.assign({ headers: headers }, options));
+            },
+
+            _loadApps: function(token) {
+                return this._query(token, '/api/apps').then(function(response) {
+                    if (response.status === 200) {
+                        return response.json();
+                    } else {
+                        throw new Error('Cannot get applications');
+                    }
+                }).then(function(apps) {
+                    // Transform the array into an object
+                    this._set_apps(apps.reduce(function(result, app) {
+                        result[app.id] = app;
+                        return result;
+                    }, {}));
+                }.bind(this));
+            },
+
+            _getApps: function(token, appsChange) {
+                const apps = appsChange.base;
+                return Object.keys(apps).reduce(function(result, key) {
+                    result.push(apps[key]);
+                    return result;
+                }, []);
+            },
+
+            _getVersions: function(token, appsChange, appId) {
+                const app = appsChange.base[appId];
+                if (app.versions) {
+                    return app.versions;
+                } else {
+                    this._query(token, `/api/app/${encodeURIComponent(app.id)}/versions`).then(function(response) {
+                        if (response.status === 200) {
+                            return response.json();
+                        } else {
+                            throw new Error('Cannot get applications');
+                        }
+                    }).then(function(versions) {
+                        const allVersions = [];
+                        if (app.previous) {
+                            // XXX: Should we find the matching version, and also keep the up/down votes here?
+                            allVersions.push({ id: 'previous' });
+                        }
+                        Array.prototype.push.apply(allVersions, versions);
+                        this.set(`_apps.${app.id}.versions`, allVersions)
+                    }.bind(this));
+                }
+            },
+
+            _getVersionUrl: function(app, version) {
+                return `/app/${encodeURIComponent(app.id)}/${version}/`;
+            },
+            _getVersionIcon: function(app, version) {
+                return app.current === version ? 'icons:check' : '';
+            },
+
+            _getAppCollapseId: function(app) {
+                return `app-${app.id.replace(/[^A-Za-z0-9_]+/g, '_')}`;
+            },
+            _tapToggleApp: function(e) {
+                // Find the paper-icon-button owning e.target(which is the icon).
+                let button = e.target;
+                while (!button.matches(`paper-icon-button[aria-controls|='app']`)) {
+                    button = button.parentElement;
+                }
+
+                // Now check the aria-controls information to find the actual collapse.
+                const collapseId = button.getAttribute('aria-controls');
+                const collapse = this.$$(`#${collapseId}`);
+                collapse.toggle();
+                button.icon = collapse.opened ? 'icons:expand-less' : 'icons:expand-more';
+            },
+
+            _tapDeployVersion: function(e) {
+                // Find the paper-icon-button owning e.target(which is the icon).
+                let button = e.target;
+                while (!button.matches('[data-app][data-version]')) {
+                    button = button.parentElement;
+                }
+
+                return this._deployVersion(this.token, this._apps[button.getAttribute('data-app')], button.getAttribute('data-version'));
+            },
+
+            _deployVersion: function(token, app, version) {
+                this._query(token, `/api/app/${encodeURIComponent(app.id)}/version/${encodeURIComponent(version)}/current`, { method: 'POST' }).then(function(response) {
+                    if (response.status === 202) {
+                        return response.json();
+                    }
+                }).then(function(app) {
+                    // Notify a change in the application, so that we get the new contents.
+                    this.set(`_apps.${app.id}`, app);
+                }.bind(this));
+            }
+
+        });
+    </script>
+</dom-module>
