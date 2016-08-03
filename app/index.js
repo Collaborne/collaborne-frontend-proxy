@@ -322,7 +322,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	});
 
 	app.put('/api/app/:application/version/:newVersion', authentication.required(), function(req, res) {
-		createVersion(req.applicationId, req.params.newVersion, function(err, result) {
+		createVersion(req.application.id, req.params.newVersion, function(err, result) {
 			if (err) {
 				console.log(err);
 				return res.status(500).send({ error: err.message });
