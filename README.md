@@ -1,4 +1,4 @@
-# collaborne-frontend-proxy
+# collaborne-frontend-proxy [![Build Status](https://travis-ci.org/Collaborne/collaborne-frontend-proxy.svg?branch=master)](https://travis-ci.org/Collaborne/collaborne-frontend-proxy)
 
 ## Running
 

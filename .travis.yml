@@ -1,0 +1,15 @@
+language: node_js
+sudo: false
+node_js:
+- node
+cache:
+  directories:
+  - node_modules
+  - "$HOME/.cache/bower"
+deploy:
+  provider: heroku
+  app: collaborne-frontend-proxy
+  on: master
+  skip_cleanup: true
+  api_key:
+    secure: iCAhyMJP015Y/0R5eWdPZC61hdrqp9zaYKuLQU33xvWdrZgKYjMNDFIxZNSiPy9nD02pEgNRWgh3ZH87wss1mAUlGCJDtPhN/k3Jhmot+DTHphEXnsrxVrXTcz51/XX5w1drp/Vc8qHcfsj7ApzpgfWe2sum2vxzGk19+vfYFxdSJbt5WQW2sNXMrIxDURI839pJ6WP6K/2jHOf9wUoo4Jmo6fG45H+GdXpbK+LpvkgxvVZ81wJHzFTIsATriewxf6uXrGhpXa/MPNUpLdi91wGQSJAvX2Vp3mXTTyKbOlZMVsUW4uUDi0a+dhfI7RKrwD52VSHYb6Ag6DgDjpEogFBRUYdnJsZ4Z0UEwgX5og6l9TJajs6sV5HtQIhF9vQWiQRA4YJLSnZ8Zg0D9HpUxCeerxju2WWRdelDJtuVtPNz7Izbmm3V61//IJC/wI+utWNKFGZcWtnld4CKMBBU76X5Mi6Le4KdPSTMEBeBrbUVg9mzPdpBjUxf1GStn3NS2McxMCjs4h5LVnobWlfn7GI/7yUA7BRhSjfRPblOhAyCry5CDeRh5G5tlSyqaNmh3R3/m82htlcVpbq9VbXVzOKCXnCmRUxEs3iF9swaLHEoVT7CgsjcftJtDdLUMwMXo5uwsXl/gn9XyPGvQEvmnoH0sJjyynZTK3EKrEagqA8=
