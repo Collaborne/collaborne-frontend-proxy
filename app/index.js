@@ -416,6 +416,9 @@ pg.connect(app.locals.pg.url, function(err, client) {
 					console.log(`New branch ${req.body.ref} by ${owner}`);
 				}
 				return res.status(200).send();
+			case 'status':
+				// TODO: Eventually monitor these updates, and potentially update our state
+				return res.status(200).send();
 			default:
 				console.log(`Received unexpected event ${event} from github: ${JSON.stringify(req.body)}`);
 				return res.status(505).send();
