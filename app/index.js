@@ -51,7 +51,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	}
 	function queryApps(callback) {
 		return client.query(SQL`SELECT * FROM apps`, callback);
-	}	
+	}
 	function queryApp(appId, callback) {
 		return client.query(SQL`SELECT * FROM apps WHERE id=${appId}`, callback);
 	}
@@ -60,7 +60,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	}
 	function deleteApp(appId, callback) {
 		return client.query(SQL`DELETE FROM apps WHERE id=${appId}`, callback);
-	}	
+	}
 	function queryVersions(appId, callback) {
 		return client.query(SQL`SELECT * FROM versions WHERE app=${appId} ORDER BY row_number() OVER () DESC`, callback);
 	}
@@ -159,6 +159,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		// Validate that that version exists
 		queryVersion(req.application.id, resolvedVersion, function(err, result) {
 			if (err) {
+				console.log(err);
 				return res.status(500).send({ error: err.message });
 			}
 			if (result.rowCount !== 1) {
@@ -298,6 +299,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	app.get('/api/app/:application/versions', authentication.required(), function(req, res) {
 		queryVersions(req.application.id, function(err, result) {
 			if (err) {
+				console.log(err);
 				return res.status(500).send({ error: err.message });
 			}
 
@@ -307,6 +309,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	app.get('/api/app/:application/version/:version', authentication.required(), function(req, res) {
 		queryVersion(req.application.id, req.version, function(err, result) {
 			if (err) {
+				console.log(err);
 				return res.status(500).send({ error: err.message });
 			}
 
@@ -321,6 +324,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	app.put('/api/app/:application/version/:newVersion', authentication.required(), function(req, res) {
 		createVersion(req.applicationId, req.params.newVersion, function(err, result) {
 			if (err) {
+				console.log(err);
 				return res.status(500).send({ error: err.message });
 			}
 
@@ -331,11 +335,12 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			if (req.application.autoupdate) {
 				replaceVersion(req.application.id, req.application.current, req.params.version, function(err, result) {
 					if (err) {
+						console.log(err);
 						return res.status(500).send({ error: err.message });
 					}
 
-					return res.status(201).send(response);					
-				});				
+					return res.status(201).send(response);
+				});
 			} else {
 				return res.status(201).send(response);
 			}
@@ -344,6 +349,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	app.delete('/api/app/:application/version/:fullVersion', authentication.required(), function(req, res) {
 		deleteVersion(req.application.id, req.params.fullVersion, function(err, result) {
 			if (err) {
+				console.log(err);
 				return res.status(500).send({ error: err.message });
 			}
 
@@ -355,9 +361,10 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			// XXX: Is this really an error, or should we just silently accept it?
 			return res.status(400).send({ error: `${req.version} is already current` });
 		}
-		
+
 		replaceVersion(req.application.id, req.application.current, req.version, function(err, result) {
 			if (err) {
+				console.log(err);
 				return res.status(500).send({ error: err.message });
 			}
 
