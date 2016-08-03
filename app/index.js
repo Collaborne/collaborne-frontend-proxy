@@ -366,7 +366,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 						return res.status(403).end();
 					}
 
-					return res.cookie('token', token).redirect('/ui');
+					return res.cookie('token', token).redirect('/ui/');
 				});
 			});
 		});
