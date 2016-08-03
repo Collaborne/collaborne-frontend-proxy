@@ -78,7 +78,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		}
 	});
 
-	app.param('app', function(req, res, next, id) {
+	app.param('application', function(req, res, next, id) {
 		client.query(SQL`SELECT * FROM apps WHERE id=${id}`, function(err, result) {
 			if (err) {
 				return next(err);
@@ -144,7 +144,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		return res.sendFile(path.join(__dirname, file));
 	});
 
-	app.get('/app/:app/:version/*?', function(req, res) {
+	app.get('/app/:application/:version/*?', function(req, res) {
 		// XXX: anything we should do to the path?
 		const file = req.params[0] || 'index.html';
 		const params = {
@@ -213,7 +213,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 
-	app.get('/api/app/:app', authentication.required(), function(req, res) {
+	app.get('/api/app/:application', authentication.required(), function(req, res) {
 		client.query(SQL`SELECT * FROM apps WHERE id=${req.application.id}`, function(err, result) {
 			if (err) {
 				console.log(err);
@@ -246,7 +246,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 
-	app.delete('/api/app/:app', authentication.required(), function(req, res) {
+	app.delete('/api/app/:application', authentication.required(), function(req, res) {
 		client.query(SQL`DELETE FROM apps WHERE id=${req.application.id}`, function(err, result) {
 			if (err) {
 				return res.status(400).send({ error: err.message });
@@ -256,7 +256,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 
-	app.get('/api/app/:app/versions', authentication.required(), function(req, res) {
+	app.get('/api/app/:application/versions', authentication.required(), function(req, res) {
 		client.query(SQL`SELECT * FROM versions WHERE app=${req.application.id} ORDER BY row_number() OVER () DESC`, function(err, result) {
 			if (err) {
 				return res.status(500).send({ error: err.message });
@@ -265,7 +265,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			return res.status(200).send(result.rows);
 		});
 	});
-	app.get('/api/app/:app/version/:version', authentication.required(), function(req, res) {
+	app.get('/api/app/:application/version/:version', authentication.required(), function(req, res) {
 		client.query(SQL`SELECT * FROM versions WHERE app=${req.application.id} AND id=${req.version}`, function(err, result) {
 			if (err) {
 				return res.status(500).send({ error: err.message });
@@ -279,7 +279,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 
-	app.put('/api/app/:app/version/:newVersion', authentication.required(), function(req, res) {
+	app.put('/api/app/:application/version/:newVersion', authentication.required(), function(req, res) {
 		client.query(SQL`INSERT INTO versions (id, app) VALUES (${req.params.newVersion}, ${req.application.id})`, function(err, result) {
 			if (err) {
 				return res.status(500).send({ error: err.message });
@@ -302,7 +302,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			}
 		});
 	});
-	app.delete('/api/app/:app/version/:fullVersion', authentication.required(), function(req, res) {
+	app.delete('/api/app/:application/version/:fullVersion', authentication.required(), function(req, res) {
 		client.query(SQL`DELETE FROM versions WHERE app=${req.application.id} AND id=${req.params.fullVersion}`, function(err, result) {
 			if (err) {
 				return res.status(500).send({ error: err.message });
@@ -311,7 +311,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			return res.status(204).end();
 		});
 	});
-	app.post('/api/app/:app/version/:version/current', authentication.required(), function(req, res) {
+	app.post('/api/app/:application/version/:version/current', authentication.required(), function(req, res) {
 		if (req.version === req.application.current) {
 			// XXX: Is this really an error, or should we just silently accept it?
 			return res.status(400).send({ error: `${req.version} is already current` });
