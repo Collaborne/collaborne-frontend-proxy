@@ -1,5 +1,19 @@
 # collaborne-frontend-proxy
 
+## Running
+
+This project assumes various environment variables to be set in order to work:
+
+| Variable              | Description                                        |
+| --------------------- | -------------------------------------------------- |
+| CFP_AWS_BUCKET        | Name of the bucket in S3                           |
+| CFP_JWT_KEY           | Key for signing the JWTs, should be random enough. |
+| AWS_ACCESS_KEY_ID     | AWS SDK Access Key Id                              |
+| AWS_SECRET_ACCESS_KEY | AWS SDK Secret Access Key                          |
+| GH_CLIENT_ID          | Client ID for the GitHub integration               |
+| GH_CLIENT_SECRET      | Client secret for the GitHub integration           |
+
+
 ## License
 
     This software is licensed under the Apache 2 license, quoted below.
