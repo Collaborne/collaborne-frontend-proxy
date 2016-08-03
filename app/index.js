@@ -155,7 +155,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				return res.status(500).send({ error: err.message });
 			}
 			if (result.rowCount !== 1) {
-				return res.status(404).end();
+				return res.status(404).send();
 			}
 
 			req.version = resolvedVersion;
@@ -238,7 +238,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		queryApps(function(err, result) {
 			if (err) {
 				console.log(err);
-				return res.status(500).end();
+				return res.status(500).send();
 			}
 
 			return res.status(200).send(result.rows);
@@ -253,7 +253,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			}
 
 			if (result.rowCount !== 1) {
-				return res.status(404).end();
+				return res.status(404).send();
 			}
 
 			return res.status(200).send(result.rows[0]);
@@ -284,7 +284,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				return res.status(400).send({ error: err.message });
 			}
 
-			return res.status(204).end();
+			return res.status(204).send();
 		});
 	});
 
@@ -304,7 +304,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			}
 
 			if (result.rowCount !== 1) {
-				return res.status(404).end();
+				return res.status(404).send();
 			}
 
 			return res.status(200).send(result.rows[0]);
@@ -340,7 +340,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				return res.status(500).send({ error: err.message });
 			}
 
-			return res.status(204).end();
+			return res.status(204).send();
 		});
 	});
 	app.post('/api/app/:application/version/:version/current', authentication.required(), function(req, res) {
@@ -380,7 +380,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		request.post(accessTokenRequest, function(err, response, token) {
 			if (err) {
 				console.log(`Callback error: ${err}: ${JSON.stringify(token)}`);
-				return res.status(403).end();
+				return res.status(403).send();
 			}
 
 			// query the github api for the user id
@@ -395,7 +395,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			request.get(userRequest, function(err, response, user) {
 				if (err) {
 					console.log(`User error: ${err}: ${JSON.stringify(user)}`);
-					return res.status(403).end();
+					return res.status(403).send();
 				}
 
 				// Ok, we have a user login, issue a JWT for this user.
@@ -403,7 +403,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				// the API.
 				jwt.sign({ sub: user.login, avatar: user.avatar_url, home: user.html_url }, req.app.locals.jwt.key, { issuer: req.app.locals.jwt.issuer }, function(err, token) {
 					if (err) {
-						return res.status(403).end();
+						return res.status(403).send();
 					}
 
 					return res.cookie('token', token).redirect('/ui/');
