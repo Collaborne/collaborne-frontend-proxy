@@ -333,7 +333,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				app: req.application.id
 			};
 			if (req.application.autoupdate) {
-				replaceVersion(req.application.id, req.application.current, req.params.version, function(err, result) {
+				replaceVersion(req.application.id, req.application.current, req.params.newVersion, function(err, result) {
 					if (err) {
 						console.log(err);
 						return res.status(500).send({ error: err.message });
