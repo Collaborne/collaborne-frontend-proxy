@@ -201,7 +201,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 						break;
 					default:
 						console.log(err);
-						res.status(500);
+						res.status(500).send({ error: err.message });
 						break;
 				}
 				return res.send();
@@ -238,7 +238,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		queryApps(function(err, result) {
 			if (err) {
 				console.log(err);
-				return res.status(500).send();
+				return res.status(500).send({ error: err.message });
 			}
 
 			return res.status(200).send(result.rows);
