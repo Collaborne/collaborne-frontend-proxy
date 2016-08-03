@@ -44,6 +44,38 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		throw err;
 	}
 
+	// CRUD operations
+	function queryUser(userId, callback) {
+		return client.query(SQL`SELECT * FROM users WHERE id=${userId}`, callback);
+	}
+	function queryApps(callback) {
+		return client.query(SQL`SELECT * FROM apps`, callback);
+	}	
+	function queryApp(appId, callback) {
+		return client.query(SQL`SELECT * FROM apps WHERE id=${appId}`, callback);
+	}
+	function createApp(appId, ownerId, callback) {
+		return client.query(SQL`INSERT INTO apps (id, owner) VALUES (${appId}, ${ownerId})`, callback);
+	}
+	function deleteApp(appId, callback) {
+		return client.query(SQL`DELETE FROM apps WHERE id=${appId}`, callback);
+	}	
+	function queryVersions(appId, callback) {
+		return client.query(SQL`SELECT * FROM versions WHERE app=${appId} ORDER BY row_number() OVER () DESC`, callback);
+	}
+	function queryVersion(appId, versionId, callback) {
+		return client.query(SQL`SELECT * FROM versions WHERE app=${appId} AND id=${versionId}`, callback);
+	}
+	function createVersion(appId, versionId, callback) {
+		return client.query(SQL`INSERT INTO versions (id, app) VALUES (${versionId}, ${appId})`, callback);
+	}
+	function deleteVersion(appId, versionId, callback) {
+		return client.query(SQL`DELETE FROM versions WHERE app=${appId} AND id=${versionId}`, callback);
+	}
+	function replaceVersion(appId, previousVersionId, newVersionId, callback) {
+		return client.query(SQL`UPDATE apps SET current=${newVersionId}, previous=${previousVersionId} WHERE id=${appId}`, callback);
+	}
+
 	app.set('port', (process.env.PORT || 5000));
 
 	app.use(bodyParser.json());
@@ -59,7 +91,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 					return res.status(403).send();
 				}
 
-				client.query(SQL`SELECT * FROM users WHERE id=${token.sub}`, function(err, result) {
+				queryUser(token.sub, function(err, result) {
 					if (err) {
 						return next(err);
 					}
@@ -79,7 +111,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	});
 
 	app.param('application', function(req, res, next, id) {
-		client.query(SQL`SELECT * FROM apps WHERE id=${id}`, function(err, result) {
+		queryApp(id, function(err, result) {
 			if (err) {
 				return next(err);
 			}
@@ -118,7 +150,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		}
 
 		// Validate that that version exists
-		client.query(SQL`SELECT * FROM versions WHERE app=${req.application.id} AND id=${resolvedVersion}`, function(err, result) {
+		queryVersion(req.application.id, resolvedVersion, function(err, result) {
 			if (err) {
 				return res.status(500).send({ error: err.message });
 			}
@@ -203,7 +235,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	});
 
 	app.get('/api/apps', authentication.required(), function(req, res) {
-		client.query(SQL`SELECT * FROM apps`, function(err, result) {
+		queryApps(function(err, result) {
 			if (err) {
 				console.log(err);
 				return res.status(500).end();
@@ -214,7 +246,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	});
 
 	app.get('/api/app/:application', authentication.required(), function(req, res) {
-		client.query(SQL`SELECT * FROM apps WHERE id=${req.application.id}`, function(err, result) {
+		queryApp(req.application.id, function(err, result) {
 			if (err) {
 				console.log(err);
 				return res.status(500).send({ error: err.message });
@@ -228,12 +260,12 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 
-	app.put('/api/app/:newApp', authentication.required(), function(req, res) {
+	app.put('/api/app/:newApplication', authentication.required(), function(req, res) {
 		if (!req.body.owner) {
 			return res.status(400).send({ error: 'owner required' });
 		}
 
-		client.query(SQL`INSERT INTO apps (id, owner) VALUES (${req.params.newApp}, ${req.body.owner})`, function(err, result) {
+		createApp(req.params.newApplication, req.body.owner, function(err, result) {
 			if (err) {
 				return res.status(400).send({ error: err.message });
 			}
@@ -247,7 +279,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	});
 
 	app.delete('/api/app/:application', authentication.required(), function(req, res) {
-		client.query(SQL`DELETE FROM apps WHERE id=${req.application.id}`, function(err, result) {
+		deleteApp(req.application.id, function(err, result) {
 			if (err) {
 				return res.status(400).send({ error: err.message });
 			}
@@ -257,7 +289,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	});
 
 	app.get('/api/app/:application/versions', authentication.required(), function(req, res) {
-		client.query(SQL`SELECT * FROM versions WHERE app=${req.application.id} ORDER BY row_number() OVER () DESC`, function(err, result) {
+		queryVersions(req.application.id, function(err, result) {
 			if (err) {
 				return res.status(500).send({ error: err.message });
 			}
@@ -266,7 +298,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 	app.get('/api/app/:application/version/:version', authentication.required(), function(req, res) {
-		client.query(SQL`SELECT * FROM versions WHERE app=${req.application.id} AND id=${req.version}`, function(err, result) {
+		queryVersion(req.application.id, req.version, function(err, result) {
 			if (err) {
 				return res.status(500).send({ error: err.message });
 			}
@@ -280,7 +312,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	});
 
 	app.put('/api/app/:application/version/:newVersion', authentication.required(), function(req, res) {
-		client.query(SQL`INSERT INTO versions (id, app) VALUES (${req.params.newVersion}, ${req.application.id})`, function(err, result) {
+		createVersion(req.applicationId, req.params.newVersion, function(err, result) {
 			if (err) {
 				return res.status(500).send({ error: err.message });
 			}
@@ -290,7 +322,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				app: req.application.id
 			};
 			if (req.application.autoupdate) {
-				client.query(SQL`UPDATE apps SET current=${req.params.version}, previous=${req.application.current} WHERE id=${req.application.id}`, function(err, result) {
+				replaceVersion(req.application.id, req.application.current, req.params.version, function(err, result) {
 					if (err) {
 						return res.status(500).send({ error: err.message });
 					}
@@ -303,7 +335,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 	app.delete('/api/app/:application/version/:fullVersion', authentication.required(), function(req, res) {
-		client.query(SQL`DELETE FROM versions WHERE app=${req.application.id} AND id=${req.params.fullVersion}`, function(err, result) {
+		deleteVersion(req.application.id, req.params.fullVersion, function(err, result) {
 			if (err) {
 				return res.status(500).send({ error: err.message });
 			}
@@ -317,7 +349,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			return res.status(400).send({ error: `${req.version} is already current` });
 		}
 		
-		client.query(SQL`UPDATE apps SET current=${req.version}, previous=${req.application.current} WHERE id=${req.application.id}`, function(err, result) {
+		replaceVersion(req.application.id, req.application.current, req.version, function(err, result) {
 			if (err) {
 				return res.status(500).send({ error: err.message });
 			}
