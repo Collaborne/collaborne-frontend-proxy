@@ -12,6 +12,7 @@ This project assumes various environment variables to be set in order to work:
 | AWS_SECRET_ACCESS_KEY | AWS SDK Secret Access Key                          |
 | GH_CLIENT_ID          | Client ID for the GitHub integration               |
 | GH_CLIENT_SECRET      | Client secret for the GitHub integration           |
+| GH_WEBHOOK_SECRET     | Secret used for signing webhook events             |
 
 
 ## License
