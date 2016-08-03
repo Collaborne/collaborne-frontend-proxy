@@ -10,7 +10,7 @@
             };
         });
         const kvs = map.filter(kv => kv.name === name);
-        return kvs.length === 1 ? kvs[0] : null;
+        return kvs.length > 0 ? kvs[0] : null;
     }
 
     function _parseCookie(name) {
