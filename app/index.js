@@ -350,7 +350,6 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				console.log(`Callback error: ${err}: ${JSON.stringify(token)}`);
 				return res.status(403).end();
 			}
-			console.log(`Received callback ${JSON.stringify(token)}`);
 
 			// query the github api for the user id
 			const userRequest = {
@@ -366,8 +365,6 @@ pg.connect(app.locals.pg.url, function(err, client) {
 					console.log(`User error: ${err}: ${JSON.stringify(user)}`);
 					return res.status(403).end();
 				}
-
-				console.log(`Received user response: ${user} | ${JSON.stringify(user)}`);
 
 				// Ok, we have a user login, issue a JWT for this user.
 				// We're only going to actually validate whether the user is *authorized* to use the app when they query
