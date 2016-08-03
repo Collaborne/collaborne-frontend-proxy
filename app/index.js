@@ -6,6 +6,7 @@ const pg = require('pg');
 const request = require('request');
 const AWS = require('aws-sdk');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -18,7 +19,7 @@ const app = express();
 // Note that these should all come from the outside (via environment variables or similar).
 // Credentials for AWS need to be delivered in AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables.
 app.locals.s3 = { bucket: process.env.CFP_AWS_BUCKET };
-app.locals.github = { clientId: process.env.GH_CLIENT_ID, clientSecret: process.env.GH_CLIENT_SECRET, };
+app.locals.github = { clientId: process.env.GH_CLIENT_ID, clientSecret: process.env.GH_CLIENT_SECRET, webhookSecret: process.env.GH_WEBHOOK_SECRET };
 app.locals.jwt = { key: process.env.CFP_JWT_KEY, issuer: 'Collaborne/collaborne-frontend-proxy' };
 app.locals.pg = { url: process.env.DATABASE_URL };
 
@@ -78,7 +79,13 @@ pg.connect(app.locals.pg.url, function(err, client) {
 
 	app.set('port', (process.env.PORT || 5000));
 
-	app.use(bodyParser.json());
+	// See http://stackoverflow.com/a/35651853/196315
+	var rawBodySaver = function (req, res, buf, encoding) {
+		if (buf && buf.length) {
+			req.rawBody = buf.toString(encoding || 'utf8');
+		}
+	}
+	app.use(bodyParser.json({ verify: rawBodySaver }));
 	app.use(morgan('dev'));
 	app.use(function auth(req, res, next) {
 		req.challenge = req.get('authorization');
@@ -412,7 +419,34 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 
-	app.post('/github/event', function(req, res) {
+	function validateGitHubSignature(req, res, next) {
+		// Validate the signature if we have a key. The assumption is that this key is configured in GitHub as well.
+		if (!req.app.locals.github.webhookSecret) {
+			return next();
+		}
+
+		const hmac = crypto.createHmac('sha1', req.app.locals.github.webhookSecret);
+		hmac.setEncoding('hex');
+		hmac.end(req.rawBody, function() {
+			const signature = 'sha1=' + hmac.read();
+			const expectedSignature = req.get('X-Hub-Signature');
+			if (!expectedSignature) {
+				// Missing signature, likely misconfigured in GitHub.
+				// Still: reject the request.
+				return res.status(400).error({ error: 'Missing GitHub signature'} );
+			}
+
+			if (expectedSignature !== signature) {
+				console.log(`Expected: ${expectedSignature}, actual: ${signature}`);
+				return res.status(400).error({ error: 'Wrong GitHub signature' });
+			}
+
+			// All good, proceed.
+			return next();
+		});
+	}
+
+	app.post('/github/event', validateGitHubSignature, function(req, res) {
 		const event = req.get('X-GitHub-Event');
 		switch (event) {
 			case 'ping':
