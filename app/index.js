@@ -285,10 +285,21 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				return res.status(500).send({ error: err.message });
 			}
 
-			return res.status(201).send({
+			const response = {
 				id: req.params.newVersion,
 				app: req.application.id
-			});
+			};
+			if (req.application.autoupdate) {
+				client.query(SQL`UPDATE apps SET current=${req.params.version}, previous=${req.application.current} WHERE id=${req.application.id}`, function(err, result) {
+					if (err) {
+						return res.status(500).send({ error: err.message });
+					}
+
+					return res.status(201).send(response);					
+				});				
+			} else {
+				return res.status(201).send(response);
+			}
 		});
 	});
 	app.delete('/api/app/:app/version/:fullVersion', authentication.required(), function(req, res) {
