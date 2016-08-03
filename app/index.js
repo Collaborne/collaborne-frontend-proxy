@@ -446,6 +446,9 @@ pg.connect(app.locals.pg.url, function(err, client) {
 					// New branch, register a new app with the owner
 					const owner = req.body.sender.login;
 					console.log(`New branch ${req.body.ref} by ${owner}`);
+					return createApp(req.body.ref, owner, function(err, result) {
+						return res.status(200).send();
+					});
 				}
 				return res.status(200).send();
 			case 'status':
