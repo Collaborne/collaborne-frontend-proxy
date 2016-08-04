@@ -497,6 +497,19 @@ pg.connect(app.locals.pg.url, function(err, client) {
 					});
 				}
 				return res.status(200).send();
+			case 'delete':
+				if (req.body.ref_type === 'branch') {
+					// Branch removed, remove the associated app and versions
+					return deleteApp(req.body.ref, function(err, result) {
+						if (err) {
+							console.log(err);
+							return res.status(500).send({ error: err.message });
+						}
+
+						return res.status(200).send();
+					});
+				}
+				return res.status(200).send();
 			case 'status':
 				// TODO: Eventually monitor these updates, and potentially update our state
 				return res.status(200).send();
