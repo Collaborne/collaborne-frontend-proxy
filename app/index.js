@@ -59,7 +59,13 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		return client.query(SQL`INSERT INTO apps (id, owner) VALUES (${appId}, ${ownerId})`, callback);
 	}
 	function deleteApp(appId, callback) {
-		return client.query(SQL`DELETE FROM apps WHERE id=${appId}`, callback);
+		return client.query(SQL`DELETE FROM apps WHERE id=${appId}`, function(err, result) {
+			if (err) {
+				return callback(err, result);
+			}
+
+			return client.query(SQL`DELETE FROM versions WHERE app=${appId}`, callback);
+		});
 	}
 	function queryVersions(appId, callback) {
 		return client.query(SQL`SELECT * FROM versions WHERE app=${appId} ORDER BY row_number() OVER () DESC`, callback);
