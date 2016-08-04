@@ -1,19 +1,27 @@
 # collaborne-frontend-proxy [![Build Status](https://travis-ci.org/Collaborne/collaborne-frontend-proxy.svg?branch=master)](https://travis-ci.org/Collaborne/collaborne-frontend-proxy)
 
+This is a simple proxy for static websites hosted on S3, which is aware of a directory structure: instead of having one bucket for each application + version, it manages applications and versions as prefixes in S3, so application 'foo' with version '38271ad' would be searched for in the bucket under prefix `foo/38271ad`, and would be accessible under `CFP-URL/app/foo/38271ad`.
+
+CFP supports marking a version as 'current', and it tracks whichever version was 'current' before as 'previous': `CFP-URL/app/foo/current` would open the current version, and `CFP-URL/app/foo/previous` would open the previous one.
+
+CFP authorizes uses via GitHub: each user that is allowed to use the UI needs to be registered with their GitHub id in the `users` table. The applications themselves are not protected, so the links are shareable easily with designers and other stakeholders.
+
 ## Running
 
 This project assumes various environment variables to be set in order to work:
 
-| Variable              | Description                                        |
-| --------------------- | -------------------------------------------------- |
-| CFP_AWS_BUCKET        | Name of the bucket in S3                           |
-| CFP_JWT_KEY           | Key for signing the JWTs, should be random enough. |
-| AWS_ACCESS_KEY_ID     | AWS SDK Access Key Id                              |
-| AWS_SECRET_ACCESS_KEY | AWS SDK Secret Access Key                          |
-| GH_CLIENT_ID          | Client ID for the GitHub integration               |
-| GH_CLIENT_SECRET      | Client secret for the GitHub integration           |
-| GH_WEBHOOK_SECRET     | Secret used for signing webhook events             |
+| Variable              | Description                                                 |
+| --------------------- | ----------------------------------------------------------- |
+| DATABASE_URL          | URL to a Postgres (9.1+) database with `tables.sql` loaded. |
+| CFP_AWS_BUCKET        | Name of the bucket in S3                                    |
+| CFP_JWT_KEY           | Key for signing the JWTs, should be random enough.          |
+| AWS_ACCESS_KEY_ID     | AWS SDK Access Key Id                                       |
+| AWS_SECRET_ACCESS_KEY | AWS SDK Secret Access Key                                   |
+| GH_CLIENT_ID          | Client ID for the GitHub integration                        |
+| GH_CLIENT_SECRET      | Client secret for the GitHub integration                    |
+| GH_WEBHOOK_SECRET     | Secret used for signing webhook events                      |
 
+The easiest way to get CFP running is to use Heroku with their Postgres add-on.
 
 ## License
 
