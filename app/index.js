@@ -369,11 +369,10 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			}
 
 			// Return the new state
-			return res.status(202).send({
-				id: req.application.id,
+			return res.status(202).send(Object.assign({}, req.application, {
 				current: req.version,
 				previous: req.application.current
-			});
+			}));
 		});
 	});
 
