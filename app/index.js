@@ -483,6 +483,10 @@ pg.connect(app.locals.pg.url, function(err, client) {
 					const owner = req.body.sender.login;
 					console.log(`New branch ${req.body.ref} by ${owner}`);
 					return createApp(req.body.ref, owner, function(err, result) {
+						if (err) {
+							console.log(err);
+							return res.status(500).send({ error: err.message });
+						}
 						return res.status(200).send();
 					});
 				}
