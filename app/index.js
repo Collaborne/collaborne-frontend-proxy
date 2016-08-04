@@ -67,8 +67,8 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	function queryVersion(appId, versionId, callback) {
 		return client.query(SQL`SELECT * FROM versions WHERE app=${appId} AND id=${versionId}`, callback);
 	}
-	function createVersion(appId, versionId, callback) {
-		return client.query(SQL`INSERT INTO versions (id, app) VALUES (${versionId}, ${appId})`, callback);
+	function createVersion(appId, versionId, ownerId, callback) {
+		return client.query(SQL`INSERT INTO versions (id, app, owner) VALUES (${versionId}, ${appId}, ${ownerId})`, callback);
 	}
 	function deleteVersion(appId, versionId, callback) {
 		return client.query(SQL`DELETE FROM versions WHERE app=${appId} AND id=${versionId}`, callback);
@@ -322,7 +322,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	});
 
 	app.put('/api/app/:application/version/:newVersion', authentication.required(), function(req, res) {
-		createVersion(req.application.id, req.params.newVersion, function(err, result) {
+		createVersion(req.application.id, req.params.newVersion, req.user.id, function(err, result) {
 			if (err) {
 				console.log(err);
 				return res.status(500).send({ error: err.message });
