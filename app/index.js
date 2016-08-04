@@ -269,11 +269,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	});
 
 	app.put('/api/app/:newApplication', authentication.required(), function(req, res) {
-		if (!req.body.owner) {
-			return res.status(400).send({ error: 'owner required' });
-		}
-
-		createApp(req.params.newApplication, req.body.owner, function(err, result) {
+		createApp(req.params.newApplication, req.user.id, function(err, result) {
 			if (err) {
 				return res.status(400).send({ error: err.message });
 			}
@@ -281,7 +277,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			// TODO: Validate that we have a branch of that one?
 			return res.status(201).json({
 				id: req.params.newApp,
-				owner: req.body.owner
+				owner: req.user.id
 			});
 		});
 	});
