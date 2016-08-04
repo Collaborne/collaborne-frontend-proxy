@@ -55,8 +55,12 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	function queryApp(appId, callback) {
 		return client.query(SQL`SELECT * FROM apps WHERE id=${appId}`, callback);
 	}
-	function createApp(appId, ownerId, callback) {
-		return client.query(SQL`INSERT INTO apps (id, owner) VALUES (${appId}, ${ownerId})`, callback);
+	function createApp(appId, ownerId, autoupdate, callback) {
+		if (typeof autoupdate === 'function') {
+			callback = autoupdate;
+			autoupdate = false;
+		}
+		return client.query(SQL`INSERT INTO apps (id, owner, autoupdate) VALUES (${appId}, ${ownerId}, ${autoupdate})`, callback);
 	}
 	function deleteApp(appId, callback) {
 		return client.query(SQL`DELETE FROM apps WHERE id=${appId}`, function(err, result) {
@@ -488,7 +492,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 					// New branch, register a new app with the owner
 					const owner = req.body.sender.login;
 					console.log(`New branch ${req.body.ref} by ${owner}`);
-					return createApp(req.body.ref, owner, function(err, result) {
+					return createApp(req.body.ref, owner, true, function(err, result) {
 						if (err) {
 							console.log(err);
 							return res.status(500).send({ error: err.message });
