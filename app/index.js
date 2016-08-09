@@ -78,7 +78,13 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		return client.query(SQL`SELECT * FROM versions WHERE app=${appId} AND id=${versionId}`, callback);
 	}
 	function createVersion(appId, versionId, ownerId, callback) {
-		return client.query(SQL`INSERT INTO versions (id, app, owner) VALUES (${versionId}, ${appId}, ${ownerId})`, callback);
+		return client.query(SQL`INSERT INTO versions (id, app, owner) VALUES (${versionId}, ${appId}, ${ownerId})`, function(err, result) {
+			if (err) {
+				return callback(err, result);
+			}
+
+			return client.query(SQL`UPDATE apps SET latest=${versionId} WHERE id=${appId}`, callback);
+		});
 	}
 	function deleteVersion(appId, versionId, callback) {
 		return client.query(SQL`DELETE FROM versions WHERE app=${appId} AND id=${versionId}`, callback);
@@ -156,6 +162,9 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				break;
 			case 'previous':
 				resolvedVersion = req.application.previous;
+				break;
+			case 'latest':
+				resolvedVersion = req.application.latest;
 				break;
 			default:
 				resolvedVersion = version;
