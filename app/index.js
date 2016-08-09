@@ -175,6 +175,12 @@ function postgres(dbUrl) {
 							rowCount: matchingVersions.length
 						});
 					});
+				},
+				invalidateCachedApp: function(appId) {
+					return invalidateCachedApp(appId);
+				},
+				invalidateCachedVersions: function(appId) {
+					return invalidateCachedVersions(appId);
 				}
 			};
 
