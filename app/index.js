@@ -12,6 +12,7 @@ const url = require('url');
 const express = require('express');
 const bodyParser = require('body-parser');
 const authentication = require('express-authentication');
+const helmet = require('helmet');
 // TODO: also use express-authentication-oauth2?
 const morgan = require('morgan');
 const app = express();
@@ -221,6 +222,18 @@ app.use(function auth(req, res, next) {
 		return next();
 	}
 });
+
+// Lock down the application a bit
+app.use(helmet.frameguard());
+app.use(helmet.hidePoweredBy());
+app.use(helmet.hsts({
+	setIf: function(req, res) {
+		return req.secure && process.env.NODE_ENV === 'production';
+	}
+}));
+app.use(helmet.ieNoOpen());
+app.use(helmet.noSniff());
+app.use(helmet.xssFilter());
 
 function applicationParam(req, res, next, id) {
 	return req.db.cachedQueryApp(id, function(err, result) {
