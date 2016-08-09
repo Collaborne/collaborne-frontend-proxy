@@ -38,6 +38,19 @@ if (process.env.NODE_ENV === 'production') {
 	pg.defaults.ssl = true;
 }
 
+/**
+ * Cache for applications.
+ *
+ * Each entry is the app id, and the value is an object with `lastChecked` (timestamp) and `app` (application)
+ */
+const applicationCache = {};
+/**
+ * Cache for versions.
+ *
+ * Each entry is the app id, and the value is an object with `lastChecked` (timestamp) and `versions` (array of the versions)
+ */
+const versionsCache = {};
+
 // TODO: Use a pool (https://github.com/brianc/node-postgres#client-pooling)
 pg.connect(app.locals.pg.url, function(err, client) {
 	if (err) {
@@ -93,6 +106,59 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		return client.query(SQL`UPDATE apps SET current=${newVersionId}, previous=${previousVersionId} WHERE id=${appId}`, callback);
 	}
 
+	function cachedQuery(cache, query, id, callback) {
+		// TODO: Allow multiple arguments
+		const entry = cache[id];
+		if (typeof entry === 'undefined' || entry.lastChecked + 60000 < Date.now()) {
+			// Never cached, query immediately.
+			return query(id, function(err, result) {
+				if (err) {
+					return callback(err, result);
+				}
+
+				cache[id] = {
+					lastChecked: Date.now(),
+					rows: result.rows
+				};
+
+				return callback(err, result);
+			});
+		} else {
+			// Cached value. Note that this can be empty.
+			return callback(null, {
+				rows: entry.rows,
+				rowCount: entry.rows.length
+			});
+		}
+	}
+
+	function cachedQueryApp(appId, callback) {
+		return cachedQuery(applicationCache, queryApp, appId, callback);
+	}
+
+	function cachedQueryVersions(appId, callback) {
+		return cachedQuery(versionsCache, queryVersions, appId, callback);
+	}
+	function cachedQueryVersion(appId, versionId, callback) {
+		return cachedQueryVersions(appId, function(err, result) {
+			if (err) {
+				return callback(err, result);
+			}
+
+			const matchingVersions = result.rows.filter(value => value.id === versionId);
+			return callback(null, {
+				rows: matchingVersions,
+				rowCount: matchingVersions.length
+			});
+		});
+	}
+	function invalidateCachedApp(appId) {
+		delete applicationCache[appId];
+	}
+	function invalidateCachedVersions(appId) {
+		delete versionsCache[appId];
+	}
+
 	app.set('port', (process.env.PORT || 5000));
 
 	// See http://stackoverflow.com/a/35651853/196315
@@ -134,7 +200,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 	});
 
 	app.param('application', function(req, res, next, id) {
-		queryApp(id, function(err, result) {
+		cachedQueryApp(id, function(err, result) {
 			if (err) {
 				return next(err);
 			}
@@ -176,7 +242,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		}
 
 		// Validate that that version exists
-		queryVersion(req.application.id, resolvedVersion, function(err, result) {
+		cachedQueryVersion(req.application.id, resolvedVersion, function(err, result) {
 			if (err) {
 				console.log(err);
 				return res.status(500).send({ error: err.message });
@@ -307,6 +373,9 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				return res.status(400).send({ error: err.message });
 			}
 
+			invalidateCachedApp(req.application.id);
+			invalidateCachedVersions(req.application.id);
+
 			return res.status(204).send();
 		});
 	});
@@ -343,6 +412,8 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				return res.status(500).send({ error: err.message });
 			}
 
+			invalidateCachedVersions(req.application.id);
+
 			const response = {
 				id: req.params.newVersion,
 				app: req.application.id
@@ -368,6 +439,9 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				return res.status(500).send({ error: err.message });
 			}
 
+			// XXX: We could just splice out this specific one?
+			invalidateCachedVersions(req.application.id);
+
 			return res.status(204).send();
 		});
 	});
@@ -382,6 +456,8 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				console.log(err);
 				return res.status(500).send({ error: err.message });
 			}
+
+			invalidateCachedApp(req.application.id);
 
 			// Return the new state
 			return res.status(202).send(Object.assign({}, req.application, {
