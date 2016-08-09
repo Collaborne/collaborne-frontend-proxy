@@ -8,6 +8,7 @@ const AWS = require('aws-sdk');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const url = require('url');
+const NodeCache = require('node-cache');
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -34,15 +35,15 @@ function postgres(dbUrl) {
 	/**
 	 * Cache for applications.
 	 *
-	 * Each entry is the app id, and the value is an object with `lastChecked` (timestamp) and `app` (application)
+	 * Each entry is the app id, and the value is the application
 	 */
-	const applicationCache = {};
+	const applicationCache = new NodeCache({ stdTTL: 60 });
 	/**
 	 * Cache for versions.
 	 *
-	 * Each entry is the app id, and the value is an object with `lastChecked` (timestamp) and `versions` (array of the versions)
+	 * Each entry is the app id, and the value is the array of the versions
 	 */
-	const versionsCache = {};
+	const versionsCache = new NodeCache({ stdTTL: 60 });
 
 	const params = url.parse(dbUrl);
 	const auth = params.auth.split(':');
@@ -58,35 +59,37 @@ function postgres(dbUrl) {
 	return function(req, res, next) {
 		function _cachedQuery(cache, query, id, callback) {
 			// TODO: Allow multiple arguments
-			const entry = cache[id];
-			if (typeof entry === 'undefined' || entry.lastChecked + 60000 < Date.now()) {
-				// Never cached, query immediately.
-				return query(id, function(err, result) {
-					if (err) {
-						return callback(err, result);
-					}
+			cache.get(id, function(err, entry) {
+				if (err) {
+					return callback(err, null);
+				}
 
-					cache[id] = {
-						lastChecked: Date.now(),
-						rows: result.rows
-					};
+				if (typeof entry === 'undefined') {
+					// Never cached, query immediately.
+					return query(id, function(err, result) {
+						if (err) {
+							return callback(err, result);
+						}
 
-					return callback(err, result);
-				});
-			} else {
-				// Cached value. Note that this can be empty.
-				return callback(null, {
-					rows: entry.rows,
-					rowCount: entry.rows.length
-				});
-			}
+						return cache.set(id, result.rows, function(cacheErr, cacheSuccess) {
+							return callback(err, result);
+						});
+					});
+				} else {
+					// Cached value. Note that this can be empty.
+					return callback(null, {
+						rows: entry,
+						rowCount: entry.length
+					});
+				}
+			});
 		}
 
 		function _invalidateCachedApp(appId) {
-			delete applicationCache[appId];
+			applicationCache.del(appId);
 		}
 		function _invalidateCachedVersions(appId) {
-			delete versionsCache[appId];
+			versionsCache.del(appId);
 		}
 
 		// See https://github.com/brianc/node-postgres/wiki/Prepared-Statements
