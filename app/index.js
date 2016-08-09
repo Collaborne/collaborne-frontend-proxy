@@ -199,7 +199,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		}
 	});
 
-	app.param('application', function(req, res, next, id) {
+	function applicationParam(req, res, next, id) {
 		cachedQueryApp(id, function(err, result) {
 			if (err) {
 				return next(err);
@@ -213,9 +213,9 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			req.application = result.rows[0];
 			next();
 		});
-	});
+	};
 
-	app.param('version', function(req, res, next, version) {
+	function versionParam(req, res, next, version) {
 		// version could be an existing directory reference (usually a git revision hash), or it is
 		// a symbolic name:
 		// - 'current': whatever we defined in our database as 'current' for this app
@@ -254,22 +254,22 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			req.version = resolvedVersion;
 			next();
 		});
-	});
+	};
 
-	app.get('/', function(req, res) {
-		return res.redirect('/ui/');
-	});
-
-	app.get('/ui/login', function(req, res) {
+	const uiRouter = express.Router();
+	uiRouter.get('/login', function(req, res) {
 		return res.redirect(`https://github.com/login/oauth/authorize?scope=user:email&client_id=${req.app.locals.github.clientId}`);
 	});
 
-	app.get('/ui/*?', function(req, res) {
+	uiRouter.get('/*?', function(req, res) {
 		const file = req.params[0] || 'index.html';
 		return res.sendFile(path.join(__dirname, file));
 	});
 
-	app.get('/app/:application/:version/*?', function(req, res) {
+	const appRouter = express.Router();
+	appRouter.param('application', applicationParam);
+	appRouter.param('version', versionParam);
+	appRouter.get('/:application/:version/*?', function(req, res) {
 		// XXX: anything we should do to the path?
 		const file = req.params[0] || 'index.html';
 		const params = {
@@ -327,7 +327,10 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		})
 	});
 
-	app.get('/api/apps', authentication.required(), function(req, res) {
+	const apiRouter = express.Router();
+	apiRouter.param('application', applicationParam);
+	apiRouter.param('version', versionParam);
+	apiRouter.get('/apps', function(req, res) {
 		queryApps(function(err, result) {
 			if (err) {
 				console.log(err);
@@ -338,7 +341,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 
-	app.get('/api/app/:application', authentication.required(), function(req, res) {
+	apiRouter.get('/app/:application', function(req, res) {
 		queryApp(req.application.id, function(err, result) {
 			if (err) {
 				console.log(err);
@@ -353,7 +356,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 
-	app.put('/api/app/:newApplication', authentication.required(), function(req, res) {
+	apiRouter.put('/app/:newApplication', function(req, res) {
 		createApp(req.params.newApplication, req.user.id, function(err, result) {
 			if (err) {
 				return res.status(400).send({ error: err.message });
@@ -367,7 +370,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 
-	app.delete('/api/app/:application', authentication.required(), function(req, res) {
+	apiRouter.delete('/app/:application', function(req, res) {
 		deleteApp(req.application.id, function(err, result) {
 			if (err) {
 				return res.status(400).send({ error: err.message });
@@ -380,7 +383,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 
-	app.get('/api/app/:application/versions', authentication.required(), function(req, res) {
+	apiRouter.get('/app/:application/versions', function(req, res) {
 		queryVersions(req.application.id, function(err, result) {
 			if (err) {
 				console.log(err);
@@ -390,7 +393,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			return res.status(200).send(result.rows);
 		});
 	});
-	app.get('/api/app/:application/version/:version', authentication.required(), function(req, res) {
+	apiRouter.get('/app/:application/version/:version', function(req, res) {
 		queryVersion(req.application.id, req.version, function(err, result) {
 			if (err) {
 				console.log(err);
@@ -405,7 +408,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	});
 
-	app.put('/api/app/:application/version/:newVersion', authentication.required(), function(req, res) {
+	apiRouter.put('/app/:application/version/:newVersion', function(req, res) {
 		createVersion(req.application.id, req.params.newVersion, req.user.id, function(err, result) {
 			if (err) {
 				console.log(err);
@@ -432,7 +435,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			}
 		});
 	});
-	app.delete('/api/app/:application/version/:fullVersion', authentication.required(), function(req, res) {
+	apiRouter.delete('/app/:application/version/:fullVersion', function(req, res) {
 		deleteVersion(req.application.id, req.params.fullVersion, function(err, result) {
 			if (err) {
 				console.log(err);
@@ -445,7 +448,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			return res.status(204).send();
 		});
 	});
-	app.post('/api/app/:application/version/:version/current', authentication.required(), function(req, res) {
+	apiRouter.post('/app/:application/version/:version/current', function(req, res) {
 		if (req.version === req.application.current) {
 			// XXX: Is this really an error, or should we just silently accept it?
 			return res.status(400).send({ error: `${req.version} is already current` });
@@ -466,10 +469,11 @@ pg.connect(app.locals.pg.url, function(err, client) {
 			}));
 		});
 	});
-
+	
+	const githubRouter = express.Router();
 	// Callback for GitHub logins
 	// Note that we reject any user here that is not in the Collaborne organization; maybe this should be done better.
-	app.get('/github/oauth', function(req, res) {
+	githubRouter.get('/oauth', function(req, res) {
 		const accessTokenRequest = {
 			uri: 'https://github.com/login/oauth/access_token/',
 			qs: {
@@ -543,7 +547,7 @@ pg.connect(app.locals.pg.url, function(err, client) {
 		});
 	}
 
-	app.post('/github/event', validateGitHubSignature, function(req, res) {
+	githubRouter.post('/event', validateGitHubSignature, function(req, res) {
 		const event = req.get('X-GitHub-Event');
 		switch (event) {
 			case 'ping':
@@ -606,6 +610,16 @@ pg.connect(app.locals.pg.url, function(err, client) {
 				console.log(`Received unexpected event ${event} from github: ${JSON.stringify(req.body)}`);
 				return res.status(505).send();
 		}
+	});
+
+	
+	app.use('/ui', uiRouter);
+	app.use('/app', appRouter);
+	app.use('/api', authentication.required(), apiRouter);
+	app.use('/github', githubRouter);
+
+	app.get('/', function(req, res) {
+		return res.redirect('/ui/');
 	});
 
 	app.listen(app.get('port'), function() {
