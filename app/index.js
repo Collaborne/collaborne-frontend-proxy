@@ -617,7 +617,7 @@ githubRouter.post('/event', validateGitHubSignature, function(req, res) {
 				// New branch, register a new app with the owner
 				const owner = req.body.sender.login;
 				console.log(`New branch ${req.body.ref} by ${owner}`);
-				return createApp(req.body.ref, owner, true, function(err, result) {
+				return req.db.createApp(req.body.ref, owner, true, function(err, result) {
 					if (err) {
 						console.log(err);
 						return res.status(500).send({ error: err.message });
@@ -629,7 +629,7 @@ githubRouter.post('/event', validateGitHubSignature, function(req, res) {
 		case 'delete':
 			if (req.body.ref_type === 'branch') {
 				// Branch removed, remove the associated app and versions
-				return deleteApp(req.body.ref, function(err, result) {
+				return req.db.deleteApp(req.body.ref, function(err, result) {
 					if (err) {
 						console.log(err);
 						return res.status(500).send({ error: err.message });
