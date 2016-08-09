@@ -48,7 +48,7 @@
         <f-jwt-decode token="[[token]]" value="{{_decodedToken}}"></f-jwt-decode>
         <paper-header-panel class="seamed layout vertical" style="background-color: #7f7f7f">
             <paper-toolbar justify="justified">
-                <div>Collaborne Frontend Proxy</div>
+                <div><a target="_blank" href="https://github.com/Collaborne/collaborne-frontend-proxy" style="text-decoration: none; color: inherit">Collaborne Frontend Proxy</a></div>
                 <div class="layout horizontal justified user">
                     <a target="_blank" href="[[_decodedToken.home]]"><img src="[[_decodedToken.avatar]]">[[_decodedToken.sub]]</a>
                 </div>
