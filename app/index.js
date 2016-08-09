@@ -56,7 +56,7 @@ function postgres(dbUrl) {
 	};
 	const pool = new pg.Pool(config);
 	return function(req, res, next) {
-		function cachedQuery(cache, query, id, callback) {
+		function _cachedQuery(cache, query, id, callback) {
 			// TODO: Allow multiple arguments
 			const entry = cache[id];
 			if (typeof entry === 'undefined' || entry.lastChecked + 60000 < Date.now()) {
@@ -82,10 +82,10 @@ function postgres(dbUrl) {
 			}
 		}
 
-		function invalidateCachedApp(appId) {
+		function _invalidateCachedApp(appId) {
 			delete applicationCache[appId];
 		}
-		function invalidateCachedVersions(appId) {
+		function _invalidateCachedVersions(appId) {
 			delete versionsCache[appId];
 		}
 
@@ -158,10 +158,10 @@ function postgres(dbUrl) {
 				},
 
 				cachedQueryApp: function(appId, callback) {
-					return cachedQuery(applicationCache, this.queryApp, appId, callback);
+					return _cachedQuery(applicationCache, this.queryApp, appId, callback);
 				},
 				cachedQueryVersions: function(appId, callback) {
-					return cachedQuery(versionsCache, this.queryVersions, appId, callback);
+					return _cachedQuery(versionsCache, this.queryVersions, appId, callback);
 				},
 				cachedQueryVersion: function(appId, versionId, callback) {
 					return this.cachedQueryVersions(appId, function(err, result) {
@@ -177,10 +177,10 @@ function postgres(dbUrl) {
 					});
 				},
 				invalidateCachedApp: function(appId) {
-					return invalidateCachedApp(appId);
+					return _invalidateCachedApp(appId);
 				},
 				invalidateCachedVersions: function(appId) {
-					return invalidateCachedVersions(appId);
+					return _invalidateCachedVersions(appId);
 				}
 			};
 
