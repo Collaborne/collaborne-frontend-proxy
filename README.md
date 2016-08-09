@@ -2,7 +2,7 @@
 
 This is a simple proxy for static websites hosted on S3, which is aware of a directory structure: instead of having one bucket for each application + version, it manages applications and versions as prefixes in S3, so application 'foo' with version '38271ad' would be searched for in the bucket under prefix `foo/38271ad`, and would be accessible under `CFP-URL/app/foo/38271ad`.
 
-CFP supports marking a version as 'current', and it tracks whichever version was 'current' before as 'previous': `CFP-URL/app/foo/current` would open the current version, and `CFP-URL/app/foo/previous` would open the previous one.
+CFP supports marking a version as 'current', and it tracks whichever version was 'current' before as 'previous': `CFP-URL/app/foo/current` would open the current version, and `CFP-URL/app/foo/previous` would open the previous one. Additionally CFP tracks the latest created version as 'latest'.
 
 CFP authorizes uses via GitHub: each user that is allowed to use the UI needs to be registered with their GitHub id in the `users` table. The applications themselves are not protected, so the links are shareable easily with designers and other stakeholders.
 
