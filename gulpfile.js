@@ -42,14 +42,14 @@ gulp.task('heroku:app.json', function() {
 			};
 			
 			file.path = 'app.json';
-			file.contents = new Buffer(JSON.stringify(app));
+			file.contents = new Buffer(JSON.stringify(app, null, '\t'));
 			cb(null, file);
 		});
 	}
 
 	return gulp.src('package.json')
 		.pipe(appJson())
-		.pipe(gulp.dest(dist()));
+		.pipe(gulp.dest('.'));
 });
 
 gulp.task('clean', function() {

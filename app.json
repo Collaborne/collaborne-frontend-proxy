@@ -1,0 +1,5 @@
+{
+	"name": "collaborne-frontend-proxy",
+	"description": "Frontend for the collaborne-frontend S3 bucket",
+	"repository": "git+https://github.com/Collaborne/collaborne-frontend-proxy.git"
+}
