@@ -33,13 +33,14 @@
 		<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 
 		<style is="custom-style" include="iron-flex iron-positioning"></style>
+		<link rel="stylesheet" href="bower_components/css3-social-signin-buttons/auth-buttons.css">
 	</head>
 
 	<body class="fullbleed layout vertical">
 		<span id="browser-sync-binding"></span>
 		<template is="dom-bind" id="app">
-			<div hidden$="[[token]]">
-				<a href="/ui/login">Authorize via GitHub</a>
+			<div hidden$="[[token]]" class="layout horizontal center center-justified fit">
+				<a class="btn-auth btn-github large" href="/ui/login">Authorize via GitHub</a>
 			</div>
 			<template is="dom-if" if="[[token]]">
 				<collaborne-frontend-proxy-app class="flex" token="[[token]]"></collaborne-frontend-proxy-app>
