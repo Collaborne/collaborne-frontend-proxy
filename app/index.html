@@ -29,11 +29,17 @@
 
 		<script type="text/javascript" src="bower_components/babel-polyfill/browser-polyfill.js"></script>
 		<script type="text/javascript" src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
-		<link rel="import" href="elements/collaborne-frontend-proxy-app/collaborne-frontend-proxy-app.html">
 		<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+		<link rel="import" href="bower_components/paper-styles/typography.html">
+		<link rel="import" href="elements/collaborne-frontend-proxy-app/collaborne-frontend-proxy-app.html">
 
 		<style is="custom-style" include="iron-flex iron-positioning"></style>
 		<link rel="stylesheet" href="bower_components/css3-social-signin-buttons/auth-buttons.css">
+		<style is="custom-style">
+			body {
+				@apply(--paper-font-body1)
+			}
+		</style>
 	</head>
 
 	<body class="fullbleed layout vertical">
