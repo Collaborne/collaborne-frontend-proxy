@@ -4,6 +4,8 @@ const path = require('path');
 
 const gulp = require('gulp');
 
+const gulpmatch = require('gulp-match');
+
 const gBabel = require('gulp-babel');
 const gCrisper = require('gulp-crisper');
 const gDebug = require('gulp-debug');
@@ -58,7 +60,7 @@ gulp.task('copy', function() {
 	const bower = gulp.src('app/bower_components/**/*', { base: 'app' });
 	const app = gulp.src(['app/**/*', '!app/bower_components/**/*' ], { base: 'app' })
 		.pipe(gSourcemaps.init({ loadMaps: true }))
-		.pipe(gIf('*.html', gCrisper({ scriptInHead:false })))
+		.pipe(gIf(file => gulpmatch(file, '*.html') && file.relative !== 'index.html', gCrisper({ scriptInHead:false })))
 		.pipe(gIf('*.js', argv.release ? gBabel({
 			presets: ['es2015-script'],
 			compact: true
