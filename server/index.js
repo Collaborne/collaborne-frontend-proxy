@@ -308,7 +308,7 @@ uiRouter.get('/login', function(req, res) {
 
 uiRouter.get('/*?', function(req, res) {
 	const file = req.params[0] || 'index.html';
-	return res.sendFile(path.join(__dirname, file));
+	return res.sendFile(path.join(__dirname, '../dist', file));
 });
 
 const appRouter = express.Router();
