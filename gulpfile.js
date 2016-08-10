@@ -65,7 +65,6 @@ gulp.task('copy', function() {
 			presets: ['es2015-script'],
 			compact: true
 		}) : gUtil.noop()))
-		.pipe(gDebug())
 		.pipe(gIf('*.js', argv.release ? gUglify() : gUtil.noop()))
 		.pipe(gSourcemaps.write('.'));
 	return merge(bower, app)
