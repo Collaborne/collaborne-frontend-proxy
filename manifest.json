@@ -1,0 +1,11 @@
+{
+  "name": "Collaborne Frontend Proxy",
+  "short_name": "CFP",
+  "start_url": ".",
+  "display": "minimal-ui",
+  "background_color": "#fff",
+  "description": "Management interface for Collaborne frontend",
+  "lang": "en-US",
+  "dir": "ltr",
+  "orientation": "portrait-primary"
+}
