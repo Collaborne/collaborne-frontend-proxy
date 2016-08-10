@@ -3,12 +3,23 @@
 const path = require('path');
 
 const gulp = require('gulp');
-const util = require('gulp-util');
+
+const gBabel = require('gulp-babel');
+const gCrisper = require('gulp-crisper');
+const gDebug = require('gulp-debug');
+const gIf = require('gulp-if');
+const gSourcemaps = require('gulp-sourcemaps');
+const gUglify = require('gulp-uglify');
+const gUtil = require('gulp-util');
 
 const del = require('del');
 const merge = require('merge-stream');
 const through = require('through2');
 const runSequence = require('run-sequence');
+
+const argv = require('yargs')
+		.boolean('release', false)
+		.argv;
 
 function dist(dir) {
 	return dir ? path.join('dist', dir) : 'dist';
@@ -44,7 +55,19 @@ gulp.task('clean', function() {
 });
 
 gulp.task('copy', function() {
-	return gulp.src('app/**/*', { base: 'app' }).pipe(gulp.dest(dist()));
+	const bower = gulp.src('app/bower_components/**/*', { base: 'app' });
+	const app = gulp.src(['app/**/*', '!app/bower_components/**/*' ], { base: 'app' })
+		.pipe(gSourcemaps.init({ loadMaps: true }))
+		.pipe(gIf('*.html', gCrisper({ scriptInHead:false })))
+		.pipe(gIf('*.js', argv.release ? gBabel({
+			presets: ['es2015-script'],
+			compact: true
+		}) : gUtil.noop()))
+		.pipe(gDebug())
+		.pipe(gIf('*.js', argv.release ? gUglify() : gUtil.noop()))
+		.pipe(gSourcemaps.write('.'));
+	return merge(bower, app)
+		.pipe(gulp.dest(dist()));
 });
 
 gulp.task('default', [ 'clean' ], function(cb) {
