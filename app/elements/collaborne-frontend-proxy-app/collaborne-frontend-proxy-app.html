@@ -4,7 +4,6 @@
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
-<link rel="import" href="../../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-card/paper-card.html">
@@ -53,9 +52,9 @@
                     <a target="_blank" href="[[_decodedToken.home]]"><img src="[[_decodedToken.avatar]]">[[_decodedToken.sub]]</a>
                 </div>
             </paper-toolbar>
-            <iron-list items="[[_getApps(token, _apps.*)]]" as="app" class="layout vertical">
-                <template>
-                    <div class="flex" style="padding: 4px; width: 100%">
+            <div class="layout vertical fit">
+                <template is="dom-repeat" items="[[_getApps(token, _apps.*)]]" as="app">
+                    <div style="padding: 4px; width: 100%">
                         <paper-card elevation="1" style="width: 100%">
                             <div class="card-content">
                                 <div class="action">
@@ -80,7 +79,7 @@
                         </paper-card>
                     </div>
                 </template>
-            </iron-list>
+            </div>
         </paper-header-panel>
 
     </template>
