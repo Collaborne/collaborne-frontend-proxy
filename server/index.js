@@ -162,6 +162,13 @@ function postgres(dbUrl) {
 				replaceVersion: function(appId, previousVersionId, newVersionId, callback) {
 					return client.query(SQL`UPDATE apps SET current=${newVersionId}, previous=${previousVersionId} WHERE id=${appId}`, callback);
 				},
+				updateUserAccessToken: function(userId, token, callback) {
+					const expires = new Date(Date.now() + token.expires * 1000);
+					return client.query(SQL`INSERT INTO users (id, access_token, token_type, expires, refresh_token, scope)
+						VALUES (${userId}, ${token.access_token}, ${token.token_type}, ${expires}, ${token.refresh_token}, ${token.scope})
+						ON CONFLICT (id) DO
+						UPDATE SET access_token=EXCLUDED.access_token, SET token_type=EXCLUDED.token_type, SET expires=EXCLUDED.expires, SET refresh_token=EXCLUDED.refresh_token, SET scope=EXCLUDED.scope`, callback);
+				},
 
 				cachedQueryApp: function(appId, callback) {
 					return _cachedQuery(applicationCache, this.queryApp, appId, callback);
@@ -557,13 +564,19 @@ githubRouter.get('/oauth', function(req, res) {
 			// Ok, we have a user login, issue a JWT for this user.
 			// We're only going to actually validate whether the user is *authorized* to use the app when they query
 			// the API.
-			jwt.sign({ sub: user.login, avatar: user.avatar_url, home: user.html_url }, req.app.locals.jwt.key, { issuer: req.app.locals.jwt.issuer }, function(err, token) {
+			return req.db.updateUserAccessToken(user.login, token, function(err, result) {
 				if (err) {
-					return res.status(403).send();
+					return res.status(500).send({ error: err.message });
 				}
 
-				return res.cookie('token', token).redirect('/ui/');
-			});
+				return jwt.sign({ sub: user.login, avatar: user.avatar_url, home: user.html_url }, req.app.locals.jwt.key, { issuer: req.app.locals.jwt.issuer }, function(err, token) {
+					if (err) {
+						return res.status(403).send();
+					}
+
+					return res.cookie('token', token).redirect('/ui/');
+				});
+			});		
 		});
 	});
 });
