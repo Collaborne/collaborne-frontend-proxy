@@ -20,6 +20,8 @@ This project assumes various environment variables to be set in order to work:
 | GH_CLIENT_ID          | Client ID for the GitHub integration                        |
 | GH_CLIENT_SECRET      | Client secret for the GitHub integration                    |
 | GH_WEBHOOK_SECRET     | Secret used for signing webhook events                      |
+| SLACK_CLIENT_ID       | Client ID for the Slack integration                         |
+| SLACK_CLIENT_SECRET   | Client secret for the Slack integration                     |
 
 The easiest way to get CFP running is to use Heroku with their Postgres add-on.
 
