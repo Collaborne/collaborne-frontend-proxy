@@ -25,6 +25,7 @@ app.locals.s3 = { bucket: process.env.CFP_AWS_BUCKET };
 app.locals.github = { clientId: process.env.GH_CLIENT_ID, clientSecret: process.env.GH_CLIENT_SECRET, webhookSecret: process.env.GH_WEBHOOK_SECRET };
 app.locals.jwt = { key: process.env.CFP_JWT_KEY, issuer: 'Collaborne/collaborne-frontend-proxy' };
 app.locals.pg = { url: process.env.DATABASE_URL };
+app.locals.cfp = { appDir: process.env.CFP_APP_DIR || '../dist' };
 
 app.set('port', (process.env.PORT || 5000));
 
@@ -308,7 +309,7 @@ uiRouter.get('/login', function(req, res) {
 
 uiRouter.get('/*?', function(req, res) {
 	const file = req.params[0] || 'index.html';
-	return res.sendFile(path.join(__dirname, '../dist', file));
+	return res.sendFile(path.resolve(__dirname, req.app.locals.cfp.appDir, file));
 });
 
 const appRouter = express.Router();
