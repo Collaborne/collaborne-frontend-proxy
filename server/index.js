@@ -670,8 +670,14 @@ app.get('/', function(req, res) {
 	return res.redirect('/ui/');
 });
 
-app.listen(app.get('port'), function() {
-	console.log('Node app is running on port', app.get('port'));
+const options = {
+  key: fs.readFileSync('./localhost.key'),
+  cert: fs.readFileSync('./localhost.crt')
+};
+
+const port = app.get('port');
+require('http2').createServer(options, app).listen(port, function() {
+	console.log('Node app is running on port', port);
 });
 
 
