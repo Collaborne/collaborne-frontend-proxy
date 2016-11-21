@@ -53,6 +53,7 @@
                 </div>
             </paper-toolbar>
             <div class="layout vertical fit">
+                <div hidden$="[[!_error]]" class="layout horizontal center center-justified fit">[[_error]]</div>
                 <template is="dom-repeat" items="[[_getApps(token, _apps.*)]]" as="app">
                     <div style="padding: 4px; width: 100%">
                         <paper-card elevation="1" style="width: 100%">
@@ -101,6 +102,10 @@
                 _apps: {
                     type: Object,
                     readOnly: true
+                },
+                /** Last error message from the API */
+                _error: {
+                    type: String
                 }
             },
 
@@ -117,7 +122,17 @@
                 headers.set('authorization', `Bearer ${token}`);
                 headers.set('accept', 'application/json');
 
-                return fetch(path, Object.assign({ headers: headers }, options));
+                return fetch(path, Object.assign({ headers: headers }, options)).then(response => {
+                    // Catch errors and copy them into the _error element.
+                    if (!response.ok) {
+                        return response.json().then(json => {
+                            this._error = json.error;
+                            return response;
+                        });
+                    } else {
+                        return response;
+                    }
+                });
             },
 
             _loadApps: function(token) {
