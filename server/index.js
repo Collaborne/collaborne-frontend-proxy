@@ -95,14 +95,6 @@ function postgres(dbUrl) {
 			versionsCache.del(appId);
 		}
 
-		// See https://github.com/brianc/node-postgres/wiki/Prepared-Statements
-		function SQL(parts, ...values) {
-			return {
-				text: parts.reduce((prev, curr, i) => `${prev}$${i}${curr}`),
-				values
-			};
-		}
-
 		return pool.connect(function(err, client, release) {
 			if (err) {
 				console.log(`Cannot connect to ${dbUrl}: ${err}`);

@@ -30,7 +30,8 @@
     "morgan": "^1.7.0",
     "node-cache": "^3.2.1",
     "pg": "^6.0.3",
-    "request": "^2.74.0"
+    "request": "^2.74.0",
+    "sql-template-strings": "^2.2.2"
   },
   "devDependencies": {
     "babel-preset-es2015-script": "^1.0.0",
