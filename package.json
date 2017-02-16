@@ -23,12 +23,12 @@
   "dependencies": {
     "aws-sdk": "^2.4.11",
     "body-parser": "^1.15.2",
-    "dotenv": "^2.0.0",
+    "dotenv": "^4.0.0",
     "express": "^4.14.0",
     "express-authentication": "^0.3.2",
-    "helmet": "^2.1.2",
+    "helmet": "^3.4.0",
     "morgan": "^1.7.0",
-    "node-cache": "^3.2.1",
+    "node-cache": "^4.1.1",
     "pg": "^6.0.3",
     "request": "^2.74.0",
     "sql-template-strings": "^2.2.2"
@@ -40,16 +40,16 @@
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-crisper": "^1.1.0",
-    "gulp-debug": "^2.1.2",
+    "gulp-debug": "^3.1.0",
     "gulp-if": "^2.0.1",
-    "gulp-sourcemaps": "^1.6.0",
+    "gulp-sourcemaps": "^2.4.1",
     "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.7",
     "jsonwebtoken": "^7.1.7",
     "merge-stream": "^1.0.0",
     "run-sequence": "^1.2.2",
     "through2": "^2.0.1",
-    "yargs": "^4.8.1"
+    "yargs": "^6.6.0"
   },
   "cacheDirectories": [
     "node_modules",
