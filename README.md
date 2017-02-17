@@ -1,6 +1,4 @@
-# collaborne-frontend-proxy [![Build Status](https://travis-ci.org/Collaborne/collaborne-frontend-proxy.svg?branch=master)](https://travis-ci.org/Collaborne/collaborne-frontend-proxy)
-
-[![Greenkeeper badge](https://badges.greenkeeper.io/Collaborne/collaborne-frontend-proxy.svg)](https://greenkeeper.io/)
+# collaborne-frontend-proxy [![Build Status](https://travis-ci.org/Collaborne/collaborne-frontend-proxy.svg?branch=master)](https://travis-ci.org/Collaborne/collaborne-frontend-proxy) [![Greenkeeper badge](https://badges.greenkeeper.io/Collaborne/collaborne-frontend-proxy.svg)](https://greenkeeper.io/)
 
 This is a simple proxy for static websites hosted on S3, which is aware of a directory structure: instead of having one bucket for each application + version, it manages applications and versions as prefixes in S3, so application 'foo' with version '38271ad' would be searched for in the bucket under prefix `foo/38271ad`, and would be accessible under `CFP-URL/app/foo/38271ad`.
 
