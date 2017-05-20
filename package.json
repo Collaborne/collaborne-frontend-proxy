@@ -45,7 +45,7 @@
     "gulp-debug": "^3.1.0",
     "gulp-if": "^2.0.1",
     "gulp-sourcemaps": "^2.4.1",
-    "gulp-uglify": "^2.0.0",
+    "gulp-uglify": "^3.0.0",
     "gulp-util": "^3.0.7",
     "jsonwebtoken": "^8.0.0",
     "merge-stream": "^1.0.0",
