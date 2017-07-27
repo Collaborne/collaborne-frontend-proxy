@@ -603,7 +603,7 @@ githubRouter.post('/event', validateGitHubSignature, function(req, res) {
 			// Ideas:
 			// - handle 'labeled'/'unlabeled', and copy the labels
 			// - handle 'assigned'/'unassigned', and show the assignee
-			const pr = body.pull_request;
+			const pr = req.body.pull_request;
 			switch (req.body.action) {
 				case 'opened':
 					// New PR, create the app with the owner
