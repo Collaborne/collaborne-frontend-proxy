@@ -300,11 +300,7 @@ const uiRouter = express.Router();
 uiRouter.get('/login', function(req, res) {
 	return res.redirect(`https://github.com/login/oauth/authorize?scope=user:email&client_id=${req.app.locals.github.clientId}`);
 });
-
-uiRouter.get('/*?', function(req, res) {
-	const file = req.params[0] || 'index.html';
-	return res.sendFile(path.resolve(__dirname, req.app.locals.cfp.appDir, file));
-});
+uiRouter.use(express.static(path.resolve(__dirname, app.locals.cfp.appDir)));
 
 const appRouter = express.Router();
 appRouter.param('application', applicationParam);
