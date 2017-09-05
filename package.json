@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/Collaborne/collaborne-frontend-proxy#readme",
   "dependencies": {
-    "aws-sdk": "^2.4.11",
+    "aws-sdk": "^2.109.0",
     "body-parser": "^1.15.2",
     "dotenv": "^4.0.0",
     "express": "^4.14.0",
