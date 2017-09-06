@@ -20,7 +20,7 @@ const through = require('through2');
 const runSequence = require('run-sequence');
 
 const argv = require('yargs')
-		.boolean('release', false)
+		.boolean('release')
 		.argv;
 
 function dist(dir) {
