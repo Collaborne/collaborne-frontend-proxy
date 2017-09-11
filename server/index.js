@@ -194,7 +194,7 @@ var rawBodySaver = function (req, res, buf, encoding) {
 	}
 }
 app.use(bodyParser.json({ verify: rawBodySaver }));
-app.use(morgan(process.env.MORGAN_LOG_FORMAT || 'short'));
+app.use(morgan(process.env.MORGAN_LOG_FORMAT || 'common'));
 app.use(postgres(app.locals.pg.url));
 
 app.use(function auth(req, res, next) {
