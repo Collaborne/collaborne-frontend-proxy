@@ -194,6 +194,11 @@ var rawBodySaver = function (req, res, buf, encoding) {
 	}
 }
 app.use(bodyParser.json({ verify: rawBodySaver }));
+// Overwrite how 'remote-user' determines the user:
+const defaultRemoteUser = morgan['remote-user'];
+morgan.token('remote-user', function(req) {
+	return req.user ? req.user.id : defaultRemoteUser(req) ;
+});
 app.use(morgan(process.env.MORGAN_LOG_FORMAT || 'common'));
 app.use(postgres(app.locals.pg.url));
 
