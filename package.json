@@ -51,7 +51,7 @@
     "merge-stream": "^1.0.0",
     "run-sequence": "^2.0.0",
     "through2": "^2.0.1",
-    "yargs": "^9.0.1"
+    "yargs": "^10.0.3"
   },
   "cacheDirectories": [
     "node_modules",
