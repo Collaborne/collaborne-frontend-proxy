@@ -58,6 +58,6 @@
     "app/bower_components"
   ],
   "engines": {
-    "node": "^6.3.0"
+    "node": "10"
   }
 }
