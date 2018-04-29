@@ -42,7 +42,7 @@
     "gulp": "^3.9.1",
     "gulp-babel": "^7.0.0",
     "gulp-crisper": "^1.1.0",
-    "gulp-debug": "^3.1.0",
+    "gulp-debug": "^4.0.0",
     "gulp-if": "^2.0.1",
     "gulp-sourcemaps": "^2.4.1",
     "gulp-uglify": "^3.0.0",
