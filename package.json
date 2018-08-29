@@ -40,7 +40,7 @@
     "bower": "^1.8.4",
     "del": "^3.0.0",
     "gulp": "^3.9.1",
-    "gulp-babel": "^7.0.0",
+    "gulp-babel": "^8.0.0",
     "gulp-crisper": "^1.1.0",
     "gulp-debug": "^3.1.0",
     "gulp-if": "^2.0.1",
