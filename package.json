@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/Collaborne/collaborne-frontend-proxy#readme",
   "dependencies": {
+    "@slack/client": "^3.5.4",
     "aws-sdk": "^2.4.11",
     "babel-core": "^6.26.0",
     "body-parser": "^1.15.2",

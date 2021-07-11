@@ -28,6 +28,7 @@ app.locals.github = { clientId: process.env.GH_CLIENT_ID, clientSecret: process.
 app.locals.jwt = { key: process.env.CFP_JWT_KEY, issuer: 'Collaborne/collaborne-frontend-proxy' };
 app.locals.pg = { url: process.env.DATABASE_URL };
 app.locals.cfp = { appDir: process.env.CFP_APP_DIR || '../dist' };
+app.locals.slack = { clientId: process.env.SLACK_CLIENT_ID, clientSecret: process.env.SLACK_CLIENT_SECRET };
 
 app.set('port', (process.env.PORT || 5000));
 
@@ -155,6 +156,16 @@ function postgres(dbUrl) {
 					return client.query(SQL`UPDATE apps SET current=${newVersionId}, previous=${previousVersionId} WHERE id=${appId}`, callback);
 				},
 
+				// Slack
+				updateSlackAuthorization: function(token, callback) {
+					// XXX: token.expires, token.token_type missing? Slack doesn't document these, but they should be there for OAuth 2.0 reasons.
+					return client.query(SQL`INSERT INTO slack (teamid, accesstoken, scope, botid, botaccesstoken)
+						VALUES (${token.team_id}, ${token.access_token}, ${token.scope}, ${token.bot.bot_user_id}, ${token.bot.bot_access_token}})
+						ON CONFLICT (teamid) DO
+						UPDATE SET accesstoken=EXCLUDED.accesstoken, SET scope=EXCLUDED.scope, SET botid=EXCLUDED.botid, SET botaccesstoken=EXCLUDED.botaccesstoken`, callback);
+				},
+
+				// Caching
 				cachedQueryApp: function(appId, callback) {
 					return _cachedQuery(applicationCache, this.queryApp, appId, callback);
 				},
@@ -511,22 +522,28 @@ apiRouter.post('/app/:application/version/:version/current', function(req, res) 
 	});
 });
 
-const githubRouter = express.Router();
-// Callback for GitHub logins
-// Note that we reject any user here that is not in the Collaborne organization; maybe this should be done better.
-githubRouter.get('/oauth', function(req, res) {
+function handleOAuthCallback(tokenUrl, clientId, clientSecret, code, callback) {
 	const accessTokenRequest = {
-		uri: 'https://github.com/login/oauth/access_token/',
+		uri: tokenUrl,
 		qs: {
-			client_id: req.app.locals.github.clientId,
-			client_secret: req.app.locals.github.clientSecret,
-			code: req.query.code,
+			client_id: clientId,
+			client_secret: clientSecret,
+			code: code,
 			accept: 'json'
 		},
 		useQuerystring: true,
 		json: true
 	};
-	request.post(accessTokenRequest, function(err, response, token) {
+	return request.post(accessTokenRequest, function(err, response, token) {
+		return callback(err, token);
+	});	
+}
+
+const githubRouter = express.Router();
+// Callback for GitHub logins
+// Note that we reject any user here that is not in the Collaborne organization; maybe this should be done better.
+githubRouter.get('/oauth', function(req, res) {
+	return handleOAuthCallback('https://github.com/login/oauth/access_token/', req.app.locals.github.clientId, req.app.locals.github.clientSecret, req.query.code, function(err, token) {
 		if (err) {
 			console.log(`Callback error: ${err}: ${JSON.stringify(token)}`);
 			return res.status(403).send();
@@ -653,6 +670,23 @@ githubRouter.post('/event', validateGitHubSignature, function(req, res) {
 	}
 });
 
+const slackRouter = express.Router();
+slackRouter.get('/oauth', function(req, res) {
+	return handleOAuthCallback('https://slack.com/api/oauth.access', req.app.locals.slack.clientId, req.app.locals.slack.clientSecret, req.query.code, function(err, token) {
+		if (err) {
+			console.log(`Callback error: ${err}: ${JSON.stringify(token)}`);
+			return res.status(403).send();
+		}
+
+		req.db.updateSlackAuthorization(token, function(err, result) {
+			if (err) {
+				return res.status(500).send({ error: err.message });
+			}
+			
+			return res.status(200).send();
+		});
+	});
+});
 
 app.use('/ui', uiRouter);
 app.use('/app', appRouter);
